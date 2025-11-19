@@ -105,12 +105,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\assimp\MSVC2022\include;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\glad\MSVC2022\include;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\glfw\MSVC2022\include;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\glm\include;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\irrklang\include;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\deps\assimp\MSVC2022\include;$(ProjectDir)\deps\glad\MSVC2022\include;$(ProjectDir)\deps\glfw\MSVC2022\include;$(ProjectDir)\deps\glm\include;$(ProjectDir)\deps\irrklang\include;$(ProjectDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\glfw\MSVC2022\lib\x64\Debug;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\assimp\MSVC2022\lib\x64\Debug;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\glad\MSVC2022\lib\x64\Debug;C:\Users\marti\Documents\UNAM\ing-computacion\grafica\proyecto\monster-house\deps\irrklang\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\deps\glfw\MSVC2022\lib\x64\Debug;$(ProjectDir)\deps\assimp\MSVC2022\lib\x64\Debug;$(ProjectDir)\deps\glad\MSVC2022\lib\x64\Debug;$(ProjectDir)\deps\irrklang\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glad.lib;assimp-vc143-mtd.lib;irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

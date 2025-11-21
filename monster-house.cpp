@@ -70,16 +70,11 @@ float elapsedTime = 0.0f;
 
 // Shaders
 Shader* cubemapShader;
-Shader* basicShader;
-// NUEVO: un shader por objeto (mismo VS/FS, instancias distintas)
-Shader* monoShader;
-Shader* toroideShader;
-Shader* geoShader;
+Shader* phonIlumShader;
 
 // Carga la información del modelo
 Model* lightDummy;
-Model* mono, * toroide, * geodesica;
-
+Model* monsterHouse;
 // Cubemap
 CubeMap* mainCubeMap;
 
@@ -87,10 +82,7 @@ CubeMap* mainCubeMap;
 Material material;
 
 // Luces base y subconjuntos por objeto
-std::vector<Light> gLights;
-std::vector<Light> lightsMono;
-std::vector<Light> lightsToroide;
-std::vector<Light> lightsGeodesica;
+std::vector<Light> globalLights;
 
 // Audio
 ISoundEngine* SoundEngine = createIrrKlangDevice();
@@ -145,74 +137,34 @@ bool Start() {
 	// (mismo VS/FS para los 3, instancias separadas)
 	const char* VS = "shaders/11_PhongShaderMultLights.vs";
 	const char* FS = "shaders/11_PhongShaderMultLights.fs";
-	monoShader = new Shader(VS, FS);
-	toroideShader = new Shader(VS, FS);
-	geoShader = new Shader(VS, FS);
+	phonIlumShader = new Shader(VS, FS);
 
-	basicShader = new Shader("shaders/10_vertex_simple.vs", "shaders/10_fragment_simple.fs");
 	cubemapShader = new Shader("shaders/10_vertex_cubemap.vs", "shaders/10_fragment_cubemap.fs");
 
 	// Modelos
-	mono = new Model("models/mono.fbx");
-	toroide = new Model("models/toroide_mod.fbx");
-	geodesica = new Model("models/geodesica.fbx");
-	lightDummy = new Model("models/IllumModels/lightDummy.fbx");
+	lightDummy = new Model("models/lightDummy.fbx");
+	monsterHouse = new Model("models/monster_house.fbx");
 
 	// Cubemap
 	std::vector<std::string> faces{
-		"textures/cubemap/01/posx.png",
-		"textures/cubemap/01/negx.png",
-		"textures/cubemap/01/posy.png",
-		"textures/cubemap/01/negy.png",
-		"textures/cubemap/01/posz.png",
-		"textures/cubemap/01/negz.png"
+		"textures/cubemap/01/px.jpg",
+		"textures/cubemap/01/nx.jpg",
+		"textures/cubemap/01/py.jpg",
+		"textures/cubemap/01/ny.jpg",
+		"textures/cubemap/01/pz.jpg",
+		"textures/cubemap/01/nz.jpg"
 	};
 	mainCubeMap = new CubeMap();
 	mainCubeMap->loadCubemap(faces);
 
-	// Configuración de luces (4 luces base)
-	{
-		Light light01;
-		light01.Position = glm::vec3(0.0f, 2.0f, 1.0f);
-		light01.Color = glm::vec4(0.1f, .9f, .01f, 1.0f);
-		light01.Power = glm::vec4(60.0f, 60.0f, 60.0f, 1.0f);
-		light01.alphaIndex = 30;
-		gLights.push_back(light01);
 
-		Light light02;
-		light02.Position = glm::vec3(1.0f, 1.0f, 2.0f);
-		light02.Color = glm::vec4(0.2f, .2f, .1f, 1.0f);
-		light02.Power = glm::vec4(60.0f, 60.0f, 60.0f, 1.0f);
-		light02.alphaIndex = 50;
-
-		gLights.push_back(light02);
-
-		Light light03;
-		light03.Position = glm::vec3(5.0f, 2.0f, -5.0f);
-		light03.Color = glm::vec4(0.1f, .1f, .1f, 1.0f);
-		light03.Power = glm::vec4(60.0f, 60.0f, 60.0f, 1.0f);
-		light01.alphaIndex = 75;
-		gLights.push_back(light03);
-
-		Light light04;
-		light04.Position = glm::vec3(-5.0f, 2.0f, -5.0f);
-		light04.Color = glm::vec4(0.1f, .1f, .1f, 1.0f);
-		light04.Power = glm::vec4(60.0f, 60.0f, 60.0f, 1.0f);
-		gLights.push_back(light04);
-	}
-
-	// Subconjuntos
-	lightsMono = { gLights[0] };
-	lightsToroide = { gLights[1] };
-	lightsGeodesica = { gLights[2] };
-
-	// Material
-	material.ambient = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-	material.diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-	material.specular = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-	material.transparency = 1.0f;
-
-	// SoundEngine->play2D("sound/EternalGarden.mp3", true);
+	Light l1;
+	l1.Position = glm::vec3(0.0f, 10.0f, 4.0f);
+	l1.Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	l1.Power = 20.0f * glm::vec4(2.0f);
+	l1.alphaIndex = 32;
+	l1.distance = 15.0f; // Distancia de 1 para evitar división muy grande
+	globalLights.push_back(l1);
 
 	return true;
 }
@@ -260,8 +212,8 @@ bool Update() {
 	// Entrada
 	processInput(window);
 
-	// Clear
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	// Clear con color oscuro para ver mejor
+	glClearColor(0.1f, 0.1f, 0.15f, 1.0f); // CAMBIADO
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
@@ -271,122 +223,63 @@ bool Update() {
 	{
 		mainCubeMap->drawCubeMap(*cubemapShader, projection, view);
 	}
-
-	// ---------- DIBUJO POR OBJETO: SHADER + LUCES PROPIAS (max 4) ----------
-
-	// MONO
-	{
-		monoShader->use();
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		monoShader->setMat4("projection", projection);
-		monoShader->setMat4("view", view);
-		monoShader->setVec3("eye", camera.Position);
-
-		// material de plastico
-		material.ambient = glm::vec4(0.01f, 0.01f, 0.01f, 1.0f);
-		material.diffuse = glm::vec4(0.02f, 0.02f, 0.02f, 1.0f);
-		material.specular = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
-
-		monoShader->setVec4("MaterialAmbientColor", material.ambient);
-		monoShader->setVec4("MaterialDiffuseColor", material.diffuse);
-		monoShader->setVec4("MaterialSpecularColor", material.specular);
-		monoShader->setFloat("transparency", material.transparency);
-
-		// luces (solo las de mono, máximo 4)
-		UploadLightsMax4(monoShader, lightsMono);
-
-		// model
-		glm::mat4 modelMono = glm::mat4(1.0f);
-		modelMono = glm::rotate(modelMono, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-		monoShader->setMat4("model", modelMono);
-
-		mono->Draw(*monoShader);
-	}
-
-	// TOROIDE
-	{
-		toroideShader->use();
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		toroideShader->setMat4("projection", projection);
-		toroideShader->setMat4("view", view);
-		toroideShader->setVec3("eye", camera.Position);
-		// material de oro
-
-
-		material.ambient = glm::vec4(0.24725f, 0.1995f, 0.0745f, 1.0f);
-		material.diffuse = glm::vec4(0.75164f, 0.60648f, 0.22648f, 1.0f);
-		material.specular = glm::vec4(0.628281f, 0.555802f, 0.366065f, 1.0f);
-		toroideShader->setVec4("MaterialAmbientColor", material.ambient);
-		toroideShader->setVec4("MaterialDiffuseColor", material.diffuse);
-		toroideShader->setVec4("MaterialSpecularColor", material.specular);
-		toroideShader->setFloat("transparency", material.transparency);
-
-		UploadLightsMax4(toroideShader, lightsToroide);
-
-		glm::mat4 modelTor = glm::mat4(1.0f);
-		modelTor = glm::translate(modelTor, glm::vec3(3.0f, 0.0f, 0.0f));
-		modelTor = glm::rotate(modelTor, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-		toroideShader->setMat4("model", modelTor);
-
-		toroide->Draw(*toroideShader);
-	}
-
-	// GEODÉSICA
-	{
-		geoShader->use();
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		geoShader->setMat4("projection", projection);
-		geoShader->setMat4("view", view);
-		geoShader->setVec3("eye", camera.Position);
-
-
-		// CHROME (para geodésica)
-		material.ambient = glm::vec4(0.25f, 0.25f, 0.25f, 1.0f);
-		material.diffuse = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
-		material.specular = glm::vec4(0.774597f, 0.774597f, 0.774597f, 1.0f);
-		geoShader->setVec4("MaterialAmbientColor", material.ambient);
-		geoShader->setVec4("MaterialDiffuseColor", material.diffuse);
-		geoShader->setVec4("MaterialSpecularColor", material.specular);
-		geoShader->setFloat("transparency", material.transparency);
-
-		UploadLightsMax4(geoShader, lightsGeodesica);
-
-		glm::mat4 modelGeo = glm::mat4(1.0f);
-		modelGeo = glm::translate(modelGeo, glm::vec3(-3.0f, 0.0f, 0.0f));
-		modelGeo = glm::rotate(modelGeo, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-		geoShader->setMat4("model", modelGeo);
-
-		geodesica->Draw(*geoShader);
-	}
-
 	glUseProgram(0);
 
-	// Indicadores de luces
+	// DIBUJAR LIGHT DUMMIES
 	{
-		basicShader->use();
-		basicShader->setMat4("projection", projection);
-		basicShader->setMat4("view", view);
+		phonIlumShader->use();
+		phonIlumShader->setMat4("projection", projection);
+		phonIlumShader->setMat4("view", view);
+		phonIlumShader->setVec3("eye", camera.Position);
 
-		glm::mat4 model;
-		for (size_t i = 0; i < gLights.size(); ++i) {
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, gLights[i].Position);
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-			basicShader->setMat4("model", model);
-			lightDummy->Draw(*basicShader);
+		// Material emisivo para los dummies (brillantes)
+		phonIlumShader->setVec4("MaterialAmbientColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		phonIlumShader->setVec4("MaterialDiffuseColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		phonIlumShader->setVec4("MaterialSpecularColor", glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		phonIlumShader->setFloat("transparency", 1.0f);
+
+		// Sin luces para los dummies (auto-iluminados)
+		phonIlumShader->setInt("numLights", 0);
+
+		// Dibujar un dummy por cada luz
+		for (size_t i = 0; i < globalLights.size(); ++i) {
+			glm::mat4 lightModel = glm::mat4(1.0f);
+			lightModel = glm::translate(lightModel, globalLights[i].Position);
+			lightModel = glm::scale(lightModel, glm::vec3(0.2f)); // Escala pequeña
+			phonIlumShader->setMat4("model", lightModel);
+
+			lightDummy->Draw(*phonIlumShader);
 		}
 	}
-
 	glUseProgram(0);
 
+	// MONO (CASA)
+	{
+		phonIlumShader->use();
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		phonIlumShader->setMat4("projection", projection);
+		phonIlumShader->setMat4("view", view);
+		phonIlumShader->setVec3("eye", camera.Position);
+
+		// Los materiales ahora se aplican por mesh dentro de Model::Draw()
+		// ya no necesitamos configurarlos aquí manualmente
+
+		// luces
+		UploadLightsMax4(phonIlumShader, globalLights);
+
+		// model
+		glm::mat4 monsterHouseModel = glm::mat4(1.0f);
+		monsterHouseModel = glm::rotate(monsterHouseModel, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		phonIlumShader->setMat4("model", monsterHouseModel);
+
+		monsterHouse->Draw(*phonIlumShader);
+	}
+
+	glUseProgram(0);
 	// glfw: swap buffers 
+	
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 

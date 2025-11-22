@@ -161,7 +161,7 @@ bool Start() {
 	Light l1;
 	l1.Position = glm::vec3(0.0f, 10.0f, 4.0f);
 	l1.Color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	l1.Power = 20.0f * glm::vec4(2.0f);
+	l1.Power = 50.0f * glm::vec4(2.0f);
 	l1.alphaIndex = 32;
 	l1.distance = 15.0f; // Distancia de 1 para evitar división muy grande
 	globalLights.push_back(l1);
@@ -263,8 +263,7 @@ bool Update() {
 		phonIlumShader->setMat4("view", view);
 		phonIlumShader->setVec3("eye", camera.Position);
 
-		// Los materiales ahora se aplican por mesh dentro de Model::Draw()
-		// ya no necesitamos configurarlos aquí manualmente
+		// Los materiales ahora se aplican automáticamente por mesh dentro de Model::Draw()
 
 		// luces
 		UploadLightsMax4(phonIlumShader, globalLights);
